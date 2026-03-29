@@ -36,11 +36,22 @@ def test_add_new_user(setup_database, connection):
     user = cursor.fetchone()
     assert user, "Пользователь должен быть добавлен в базу данных."
 
-# Возможные варианты тестов:
-"""
-Тест добавления пользователя с существующим логином.
-Тест успешной аутентификации пользователя.
-Тест аутентификации несуществующего пользователя.
-Тест аутентификации пользователя с неправильным паролем.
-Тест отображения списка пользователей.
-"""
+def test_add_existing_user(setup_database, connection):
+    """Тест добавления пользователя с уже существующим логином."""
+    add_user('testuser', 'testuser2@example.com', 'newpassword')
+    cursor = connection.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users WHERE username='testuser';")
+    count = cursor.fetchone()[0]
+    assert count == 1, "Дублирование логина не должно происходить."
+
+def test_authenticate_user_success(setup_database):
+    """Тест: успешная аутентификация пользователя."""
+    add_user('authuser', 'authuser@example.com', 'securepass')
+    result = authenticate_user('authuser', 'securepass')
+    assert result, "Пользователь должен успешно пройти аутентификацию."
+
+def test_authenticate_wrong_password(setup_database):
+    """Тест: аутентификация с неправильным паролем."""
+    add_user('userwrongpass', 'userwrongpass@example.com', 'correctpass')
+    result = authenticate_user('userwrongpass', 'wrongpass')
+    assert not result, "Аутентификация с неправильным паролем должна возвращать False."
